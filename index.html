@@ -170,7 +170,7 @@ footer a{color:var(--ink-2)}
 "use strict";
 // ---- Connect to your Supabase project when hosting this file yourself (or set it in the warehouse Setup tab on the same site).
 const SHOP_SUPABASE_URL = "https://ugoobcnusxmvdghghhtt.supabase.co";
-const SHOP_SUPABASE_ANON_KEY = "";
+const SHOP_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVnb29iY251c3htdmRnaGdoaHR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0Mzk4MTksImV4cCI6MjEwODAxNTgxOX0.qkZFtNaagypy3aDo2ZvhvqiXx-GyrerwS-WBm4ZfHeA";   // public anon key: safe in the browser. Never put the service_role key here.
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
