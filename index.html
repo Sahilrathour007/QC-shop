@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Corner Dash</title>
+<meta name="description" content="Groceries and essentials delivered from the dark store near you in minutes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: mobile-first storefront. Sticky header (promise + address + search), category rail, product grid, fixed cart bar, slide-up sheets. */
+:root{
+  --bg:#f6f7fb; --surface:#ffffff; --surface-2:#eef0f6; --ink:#15141d; --ink-2:#4b4a5c; --muted:#77768a; --line:#e1e3ec;
+  --brand:#4232d0; --brand-ink:#ffffff; --brand-soft:#e9e6ff; --promise:#ffb21e; --promise-ink:#2a1c00;
+  --deal:#0f8a52; --deal-soft:#e0f4ea; --bad:#c8312f; --bad-soft:#fde5e4;
+  --f-display:"Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --f-body:"Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f0f15; --surface:#181822; --surface-2:#22222e; --ink:#eeedf6; --ink-2:#bdbccd; --muted:#8e8da2; --line:#2c2c3a;
+  --brand:#8f84ff; --brand-ink:#0e0b2b; --brand-soft:#26224a; --promise:#ffbf47; --promise-ink:#2a1c00;
+  --deal:#3fc283; --deal-soft:#123323; --bad:#f07473; --bad-soft:#3a1a1a; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#0f0f15; --surface:#181822; --surface-2:#22222e; --ink:#eeedf6; --ink-2:#bdbccd; --muted:#8e8da2; --line:#2c2c3a;
+  --brand:#8f84ff; --brand-ink:#0e0b2b; --brand-soft:#26224a; --promise:#ffbf47; --promise-ink:#2a1c00;
+  --deal:#3fc283; --deal-soft:#123323; --bad:#f07473; --bad-soft:#3a1a1a; color-scheme:dark; }
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.gut{padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px))}
+.wrap{max-width:1240px;margin:0 auto}
+/* Header */
+header.top{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.hrow{display:flex;align-items:center;gap:12px;padding-block:10px}
+.logo{font-family:var(--f-display);font-weight:800;font-size:1.35rem;letter-spacing:-.02em;white-space:nowrap;color:var(--ink);text-decoration:none}
+.logo span{color:var(--brand)}
+.promise{display:flex;flex-direction:column;min-width:0;flex:1}
+.eta{font-family:var(--f-display);font-weight:800;font-size:1.05rem;display:flex;align-items:center;gap:6px}
+.eta i{font-style:normal;background:var(--promise);color:var(--promise-ink);font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:99px;font-family:var(--f-body)}
+.addr{background:none;border:0;padding:0;text-align:left;color:var(--ink-2);font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.addr b{color:var(--ink);font-weight:600}
+.iconbtn{flex:none;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:9px 12px;font-weight:600;font-size:.88rem}
+.iconbtn svg{width:18px;height:18px}
+.cartbtn{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+@media (max-width:480px){.logo{font-size:1.05rem}.eta{font-size:.92rem}.hrow{gap:10px}}
+@media (max-width:719px){.cartbtn{display:none}.iconbtn .lbl{display:none}}
+.search{position:relative;padding-bottom:10px}
+.search input{width:100%;border:1px solid var(--line);background:var(--surface-2);border-radius:12px;padding:11px 14px 11px 40px;font-size:.95rem}
+.search svg{position:absolute;left:12px;top:12px;width:18px;height:18px;color:var(--muted)}
+.cats{display:flex;gap:8px;overflow-x:auto;padding-block:2px 12px;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:7px 14px;font-size:.85rem;font-weight:600;color:var(--ink-2);white-space:nowrap}
+.cat[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+/* Sections */
+main{padding-block:18px}
+.sec{display:flex;flex-direction:column;gap:12px;margin-bottom:26px}
+.sec h2{font-family:var(--f-display);font-weight:800;font-size:1.25rem;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sec .sub{color:var(--muted);font-size:.85rem;margin-top:-8px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (min-width:560px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:820px){.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}}
+@media (min-width:1080px){.grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(150px,42%);gap:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+@media (min-width:560px){.rail{grid-auto-columns:minmax(160px,24%)}}
+@media (min-width:1080px){.rail{grid-auto-columns:minmax(170px,15.6%)}}
+.rail::-webkit-scrollbar{display:none}
+/* Card */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:6px;position:relative;min-width:0}
+.card.oos{opacity:.55}
+.pic{aspect-ratio:1/1;border-radius:10px;background:var(--surface-2);display:grid;place-items:center;overflow:hidden;max-width:100%}
+.pic svg,.pic img{width:84%;height:84%;object-fit:contain}
+.off{position:absolute;top:10px;left:10px;background:var(--deal);color:#fff;font-size:.68rem;font-weight:700;padding:3px 6px;border-radius:6px;letter-spacing:.02em}
+.temp{position:absolute;top:10px;right:10px;background:var(--surface);color:var(--ink-2);font-size:.66rem;font-weight:700;padding:2px 6px;border-radius:6px;border:1px solid var(--line)}
+.nm{font-weight:600;font-size:.88rem;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em}
+.pk{color:var(--muted);font-size:.78rem}
+.left{color:var(--bad);font-size:.74rem;font-weight:600}
+.buy{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:auto}
+.price b{font-size:.95rem} .price s{color:var(--muted);font-size:.76rem;margin-left:4px}
+.add{border:1.5px solid var(--brand);color:var(--brand);background:var(--brand-soft);font-weight:700;font-size:.82rem;border-radius:9px;padding:6px 14px;min-height:34px}
+.add:disabled{border-color:var(--line);color:var(--muted);background:var(--surface-2);cursor:not-allowed}
+.step{display:inline-flex;align-items:center;background:var(--brand);color:var(--brand-ink);border-radius:9px;min-height:34px;font-weight:700}
+.step button{background:none;border:0;color:inherit;width:30px;height:34px;font-size:1.1rem;line-height:1}
+.step button:disabled{opacity:.4;cursor:not-allowed}
+.step span{min-width:18px;text-align:center;font-size:.88rem}
+.empty{padding:40px 0;text-align:center;color:var(--muted)}
+/* Cart bar */
+.cartbar{position:fixed;left:0;right:0;bottom:0;z-index:25;padding:10px max(16px, env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px));pointer-events:none}
+.cartbar button{pointer-events:auto;width:100%;max-width:520px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--brand);color:var(--brand-ink);border:0;border-radius:14px;padding:13px 16px;font-weight:700;box-shadow:0 8px 24px rgba(30,20,120,.25)}
+.cartbar small{display:block;font-weight:500;opacity:.85;font-size:.76rem}
+/* Sheets */
+.scrim{position:fixed;inset:0;background:rgba(10,10,20,.45);z-index:40}
+.sheet{position:fixed;z-index:41;background:var(--bg);display:flex;flex-direction:column;inset:auto 0 0 0;max-height:92vh;max-height:92dvh;border-radius:18px 18px 0 0;padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (min-width:720px){.sheet{inset:0 0 0 auto;width:440px;max-height:none;border-radius:0}}
+.shead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);background:var(--surface);border-radius:inherit}
+.shead h3{margin:0;font-family:var(--f-display);font-size:1.15rem}
+.close{border:0;background:var(--surface-2);border-radius:10px;width:36px;height:36px;font-size:1.1rem}
+.sbody{overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px;flex:1}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.box h4{margin:0;font-size:.9rem}
+.line{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:10px;align-items:center}
+.line .pic{width:48px;border-radius:8px}
+.line .nm{min-height:0;font-size:.85rem}
+.bill{display:flex;justify-content:space-between;font-size:.88rem}
+.bill.total{font-weight:700;font-size:1rem;border-top:1px dashed var(--line);padding-top:8px}
+.free{color:var(--deal);font-weight:600}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.8rem;font-weight:600;color:var(--ink-2)}
+label.f input,label.f textarea{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px;font-size:1rem;width:100%}
+.sfoot{padding:12px 16px;border-top:1px solid var(--line);background:var(--surface)}
+.cta{width:100%;background:var(--brand);color:var(--brand-ink);border:0;border-radius:14px;padding:14px;font-weight:700;font-size:1rem;display:flex;justify-content:space-between}
+.cta:disabled{opacity:.5;cursor:not-allowed}
+.err{background:var(--bad-soft);color:var(--bad);border-radius:10px;padding:10px 12px;font-size:.88rem;font-weight:500}
+.note{color:var(--muted);font-size:.8rem}
+/* Tracking */
+.track{display:flex;flex-direction:column;gap:0}
+.tstep{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;position:relative;padding-bottom:16px}
+.tstep::before{content:"";position:absolute;left:13px;top:26px;bottom:0;width:2px;background:var(--line)}
+.tstep:last-child::before{display:none}
+.tdot{width:28px;height:28px;border-radius:50%;border:2px solid var(--line);background:var(--surface);display:grid;place-items:center;font-size:.8rem;font-weight:700;color:var(--muted)}
+.tstep.done .tdot{background:var(--deal);border-color:var(--deal);color:#fff}
+.tstep.now .tdot{border-color:var(--brand);color:var(--brand);box-shadow:0 0 0 4px var(--brand-soft)}
+.tstep b{display:block;font-size:.92rem} .tstep span{color:var(--muted);font-size:.8rem}
+.ordrow{display:flex;justify-content:space-between;align-items:center;gap:10px;border:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:left;width:100%}
+.badge{font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:99px;background:var(--brand-soft);color:var(--brand);white-space:nowrap}
+.badge.done{background:var(--deal-soft);color:var(--deal)}
+footer{color:var(--muted);font-size:.78rem;padding-block:10px 20px;display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between}
+footer a{color:var(--ink-2)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:10px;font-size:.85rem;z-index:60;max-width:calc(100% - 32px)}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .22s ease-out}@media (min-width:720px){.sheet{animation:inr .22s ease-out}}}
+@keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes inr{from{transform:translateX(30px);opacity:.4}to{transform:none;opacity:1}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap gut">
+  <div class="hrow">
+    <a class="logo" href="#" aria-label="Corner Dash home">corner<span>dash</span></a>
+    <div class="promise">
+      <div class="eta" id="eta">Delivery in 12 min <i id="liveTag">LIVE</i></div>
+      <button class="addr" id="addrBtn" aria-label="Change delivery address"><b>Home</b> · <span id="addrTxt">Add your address</span> ▾</button>
+    </div>
+    <button class="iconbtn" id="ordersBtn" aria-label="My orders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h12l1 4H5l1-4z"/><path d="M5 6h14v15H5z"/><path d="M9 11h6M9 15h4"/></svg><span class="lbl">My orders</span></button>
+    <button class="iconbtn cartbtn" id="cartBtnTop" aria-label="Open cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h12L22 7H6.2"/></svg><span id="cartTopTxt">Cart</span></button>
+  </div>
+  <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input type="search" id="q" placeholder="Search milk, atta, chips…" autocomplete="off" aria-label="Search products"></div>
+  <div class="cats" id="cats" role="toolbar" aria-label="Categories"></div>
+</div></header>
+
+<main class="wrap gut" id="main"></main>
+<footer class="wrap gut"><span id="srcNote">Demo store · prices are examples</span><a href="../Quick-Commerce-optimization/">Store staff: warehouse</a></footer>
+
+<div class="cartbar" id="cartbar" hidden><button id="cartBarBtn"><span><span id="cbItems">0 items</span><small id="cbTotal">₹0</small></span><span>View cart ›</span></button></div>
+
+<div class="scrim" id="scrim" hidden></div>
+<section class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="shead"><h3 id="sheetTitle"></h3><button class="close" id="sheetClose" aria-label="Close">✕</button></div>
+  <div class="sbody" id="sheetBody"></div>
+  <div class="sfoot" id="sheetFoot" hidden></div>
+</section>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="core.js"></script>
+<script>
+"use strict";
+// ---- Connect to your Supabase project when hosting this file yourself (or set it in the warehouse Setup tab on the same site).
+const SHOP_SUPABASE_URL = "";
+const SHOP_SUPABASE_ANON_KEY = "";
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ls = { get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v);}catch(e){return d;} }, set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} } };
+const rupee = n => "₹"+Math.round(n).toLocaleString("en-IN");
+const FREE_OVER=199, DELIVERY_FEE=25;
+const CAT_LABEL={Dairy:"Dairy & eggs",Bakery:"Bread & bakery",Snacks:"Chips & namkeen",Biscuits:"Biscuits",Beverages:"Drinks & juices","Instant food":"Instant food",Staples:"Atta, rice & oil","Home care":"Cleaning","Personal care":"Personal care",Baby:"Baby care",Frozen:"Frozen & ice cream"};
+const CAT_ORDER=["Dairy","Bakery","Snacks","Beverages","Biscuits","Instant food","Staples","Frozen","Personal care","Home care","Baby"];
+
+let MODE="demo", sb=null, P=[], byId=new Map(), BEST=[], OPEN=0;
+let cart = ls.get("cornerdash.cart", {});
+let cat = "", q = "";
+
+// ---------- Product illustrations (original drawings, used when there is no photo) ----------
+function hue(id){ let h=0; for(const c of id) h=(h*31+c.charCodeAt(0))%360; return h; }
+function art(p){
+  const h=hue(p.sku_id), c1=`hsl(${h} 62% 52%)`, c2=`hsl(${h} 58% 34%)`, c3=`hsl(${(h+40)%360} 70% 88%)`;
+  const brand=esc(p.name.split(/[ ,]/)[0].replace(/'s$/,"")).slice(0,9);
+  const lab=(y,w=56)=>`<rect x="${60-w/2}" y="${y}" width="${w}" height="20" rx="4" fill="#fff" opacity=".93"/><text x="60" y="${y+14}" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="10" fill="${c2}">${brand}</text>`;
+  const shapes={
+    bottle:`<rect x="50" y="10" width="20" height="14" rx="3" fill="${c2}"/><path d="M48 24h24l8 16v66a6 6 0 0 1-6 6H46a6 6 0 0 1-6-6V40z" fill="${c1}"/>${lab(62,40)}`,
+    pouch:`<path d="M30 18h60l-4 90H34z" fill="${c1}"/><path d="M30 18h60v8H30z" fill="${c2}"/>${lab(56)}`,
+    packet:`<path d="M26 22l6-6 6 6 6-6 6 6 6-6 6 6 6-6 6 6 6-6 6 6 6-6v80l-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6-6-6-6 6z" fill="${c1}"/>${lab(52,60)}`,
+    bag:`<path d="M24 22q36-12 72 0v76q-36 12-72 0z" fill="${c1}"/><path d="M24 22q36-12 72 0v8q-36-12-72 0z" fill="${c2}"/><circle cx="60" cy="86" r="12" fill="${c3}"/>${lab(46,60)}`,
+    box:`<path d="M28 26h52v84H28z" fill="${c1}"/><path d="M80 26l12-10v84l-12 10z" fill="${c2}"/><path d="M28 26l12-10h52l-12 10z" fill="${c3}"/>${lab(56,48)}`,
+    carton:`<path d="M34 34l14-20h24l14 20v76H34z" fill="${c1}"/><path d="M34 34h52v10H34z" fill="${c2}"/><circle cx="60" cy="86" r="10" fill="${c3}"/>${lab(52,46)}`,
+    jar:`<rect x="38" y="14" width="44" height="14" rx="3" fill="${c2}"/><rect x="34" y="28" width="52" height="80" rx="10" fill="${c1}"/>${lab(58,46)}`,
+    tub:`<path d="M26 32h68l-8 74H34z" fill="${c1}"/><rect x="22" y="24" width="76" height="12" rx="4" fill="${c2}"/>${lab(58,50)}`,
+    tray:`<rect x="14" y="44" width="92" height="46" rx="8" fill="${c2}"/>${[30,50,70,90].map(x=>`<ellipse cx="${x}" cy="56" rx="9" ry="11" fill="${c3}"/><ellipse cx="${x}" cy="78" rx="9" ry="11" fill="${c3}"/>`).join("")}${lab(92,50)}`,
+    loaf:`<path d="M18 52q0-26 42-26t42 26v48H18z" fill="${c1}"/><path d="M28 50q0-14 32-14t32 14" fill="none" stroke="${c3}" stroke-width="4"/>${lab(66,54)}`,
+    bar:`<rect x="18" y="42" width="84" height="40" rx="6" fill="${c1}"/><rect x="18" y="42" width="16" height="40" fill="${c2}"/>${lab(52,52)}`,
+    tube:`<path d="M30 30h60l-6 70H36z" fill="${c1}"/><rect x="50" y="100" width="20" height="10" fill="${c2}"/><path d="M28 22h64v10H28z" fill="${c2}"/>${lab(56,50)}`,
+    sack:`<path d="M30 24q30-10 60 0l6 80q-36 10-72 0z" fill="${c1}"/><path d="M40 18h40l-6 10H46z" fill="${c2}"/>${lab(56,58)}`,
+    cone:`<circle cx="60" cy="40" r="26" fill="${c3}"/><path d="M36 46h48l-24 64z" fill="${c1}"/><path d="M40 46h40" stroke="${c2}" stroke-width="6"/>${lab(64,46)}`,
+  };
+  return `<svg viewBox="0 0 120 120" role="img" aria-label="${esc(p.name)}">${shapes[p.art]||shapes.box}</svg>`;
+}
+const picture = p => p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy">` : art(p);
+
+// ---------- Data ----------
+function shortName(p){ return p.name.replace(new RegExp("[ ,]*"+p.pack.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"$"),"").replace(/,\s*\d+\s*pack$/,""); }
+function loadDemo(){
+  const S=WMSCore.mergeShopOrders(WMSCore.buildDemo(Date.now()));
+  const avail=WMSCore.availability(S), sold=new Map(), since=Date.now()-28*864e5, ord=new Map(S.sales_orders.map(o=>[o.order_id,o]));
+  for(const l of S.order_lines){ const o=ord.get(l.order_id); if(o && Date.parse(o.placed_at)>=since) sold.set(l.sku_id,(sold.get(l.sku_id)||0)+l.qty); }
+  P=S.skus.map(s=>({...s, available:Math.max(0,avail.get(s.sku_id)||0), sold:sold.get(s.sku_id)||0}));
+  OPEN=S.sales_orders.filter(o=>["placed","picking","packed"].includes(o.status)).length;
+  index();
+}
+async function loadLive(){
+  const {data,error}=await sb.from("shop_catalog").select("*"); if(error) throw error;
+  P=data.map(r=>({...r, sold:0})); index();
+}
+function index(){
+  byId=new Map(P.map(p=>[p.sku_id,p]));
+  BEST=P.filter(p=>p.available>0).slice().sort((a,b)=>b.sold-a.sold).slice(0,10);
+  for(const id of Object.keys(cart)){ const p=byId.get(id); if(!p){ delete cart[id]; continue; } if(cart[id]>p.available) cart[id]=p.available; if(cart[id]<=0) delete cart[id]; }
+  ls.set("cornerdash.cart",cart);
+}
+
+// ---------- Rendering ----------
+function card(p){
+  const n=cart[p.sku_id]||0, oos=p.available<=0, off=p.mrp_inr>p.price_inr ? Math.round((1-p.price_inr/p.mrp_inr)*100) : 0;
+  const ctl = oos ? `<button class="add" disabled>Sold out</button>`
+    : n ? `<span class="step"><button data-dec="${p.sku_id}" aria-label="Remove one ${esc(p.name)}">−</button><span aria-live="polite">${n}</span><button data-inc="${p.sku_id}" ${n>=p.available?"disabled":""} aria-label="Add one more ${esc(p.name)}">+</button></span>`
+    : `<button class="add" data-inc="${p.sku_id}" aria-label="Add ${esc(p.name)}">ADD</button>`;
+  return `<article class="card${oos?" oos":""}">${off?`<span class="off">${off}% OFF</span>`:""}${p.temp_class!=="ambient"?`<span class="temp">${p.temp_class==="frozen"?"FROZEN":"CHILLED"}</span>`:""}
+    <div class="pic">${picture(p)}</div><div class="nm">${esc(shortName(p))}</div><div class="pk">${esc(p.pack)}</div>
+    ${!oos && p.available<=5 ? `<div class="left">Only ${p.available} left</div>` : ""}
+    <div class="buy"><span class="price"><b>${rupee(p.price_inr)}</b>${off?`<s>${rupee(p.mrp_inr)}</s>`:""}</span>${ctl}</div></article>`;
+}
+function renderCats(){
+  const cats=CAT_ORDER.filter(c=>P.some(p=>p.category===c));
+  $("#cats").innerHTML=[["","All"],...cats.map(c=>[c,CAT_LABEL[c]||c])].map(([v,l])=>`<button class="cat" data-cat="${esc(v)}" aria-pressed="${cat===v}">${esc(l)}</button>`).join("");
+}
+function sortAvail(a){ return a.slice().sort((x,y)=>(y.available>0)-(x.available>0)); }
+function renderMain(){
+  const m=$("#main");
+  if(q){
+    const hits=sortAvail(P.filter(p=>(p.name+" "+p.category+" "+(CAT_LABEL[p.category]||"")).toLowerCase().includes(q)));
+    m.innerHTML = `<section class="sec"><h2>Results for “${esc(q)}”</h2>${hits.length?`<div class="grid">${hits.map(card).join("")}</div>`:`<div class="empty">Nothing matches “${esc(q)}”. Try a brand or a category, like “atta” or “chips”.</div>`}</section>`;
+    return;
+  }
+  if(cat){ m.innerHTML=`<section class="sec"><h2>${esc(CAT_LABEL[cat]||cat)}</h2><div class="grid">${sortAvail(P.filter(p=>p.category===cat)).map(card).join("")}</div></section>`; return; }
+  let h="";
+  if(BEST.length && BEST[0].sold) h+=`<section class="sec"><h2>Bestsellers near you</h2><p class="sub">What this store's customers buy most</p><div class="rail">${BEST.map(card).join("")}</div></section>`;
+  for(const c of CAT_ORDER){ const items=sortAvail(P.filter(p=>p.category===c)); if(!items.length) continue;
+    h+=`<section class="sec"><h2>${esc(CAT_LABEL[c]||c)}</h2><div class="grid">${items.map(card).join("")}</div></section>`; }
+  m.innerHTML=h || `<div class="empty">The store has no products yet.</div>`;
+}
+function totals(){ let items=0, sum=0, mrp=0; for(const [id,n] of Object.entries(cart)){ const p=byId.get(id); if(!p) continue; items+=n; sum+=n*p.price_inr; mrp+=n*p.mrp_inr; }
+  const fee = sum===0||sum>=FREE_OVER ? 0 : DELIVERY_FEE; return {items, sum, mrp, fee, grand:sum+fee}; }
+function renderCartBar(){
+  const t=totals(); $("#cartbar").hidden=!t.items;
+  $("#cbItems").textContent=`${t.items} item${t.items>1?"s":""}`; $("#cbTotal").textContent=rupee(t.grand)+(t.fee?` · add ${rupee(FREE_OVER-t.sum)} for free delivery`:" · free delivery");
+  $("#cartTopTxt").textContent = t.items ? `${t.items} · ${rupee(t.grand)}` : "Cart";
+  const mins=Math.min(30, 8+Math.ceil(OPEN*0.6)); $("#eta").firstChild.textContent=`Delivery in ${mins} min `;
+  const c=ls.get("cornerdash.customer",{}); $("#addrTxt").textContent=c.address||"Add your address";
+}
+function renderAll(){ renderCats(); renderMain(); renderCartBar(); if(sheetOpen && sheetOpen!=="cart") renderSheet(); }   // never redraw the checkout form while someone is typing
+function toast(t){ const el=$("#toast"); el.textContent=t; el.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>el.hidden=true,2200); }
+
+// ---------- Sheets: cart, orders, tracking, address (routed on the hash so the phone's back button closes them) ----------
+let sheetOpen=null, placing=false, lastErr="";
+function openSheet(name){ location.hash = name; }
+function closeSheet(){ if(location.hash) history.back(); else showSheet(null); }
+function showSheet(name){ sheetOpen=name; $("#sheet").hidden=!name; $("#scrim").hidden=!name; document.body.style.overflow=name?"hidden":""; if(name) renderSheet(); }
+function myOrders(){ return ls.get("cornerdash.myorders",[]); }
+function renderSheet(){
+  const body=$("#sheetBody"), foot=$("#sheetFoot"), title=$("#sheetTitle");
+  foot.hidden=true;
+  if(sheetOpen==="cart"){
+    title.textContent="My cart"; const t=totals(), c=ls.get("cornerdash.customer",{});
+    if(!t.items){ body.innerHTML=`<div class="empty">Your cart is empty.<br><br><button class="add" id="goShop">Start shopping</button></div>`; return; }
+    body.innerHTML=`<div class="box"><h4>Delivery in ${Math.min(30,8+Math.ceil(OPEN*0.6))} minutes</h4>
+      ${Object.entries(cart).map(([id,n])=>{ const p=byId.get(id); return `<div class="line"><div class="pic">${picture(p)}</div><div><div class="nm">${esc(shortName(p))}</div><div class="pk">${esc(p.pack)} · ${rupee(p.price_inr)}</div></div>
+        <span class="step"><button data-dec="${id}" aria-label="Remove one">−</button><span>${n}</span><button data-inc="${id}" ${n>=p.available?"disabled":""} aria-label="Add one">+</button></span></div>`; }).join("")}</div>
+      <div class="box"><h4>Bill details</h4>
+        <div class="bill"><span>Items total</span><span>${t.mrp>t.sum?`<s class="note">${rupee(t.mrp)}</s> `:""}${rupee(t.sum)}</span></div>
+        <div class="bill"><span>Delivery fee</span><span>${t.fee?rupee(t.fee):'<span class="free">FREE</span>'}</span></div>
+        ${t.fee?`<div class="note">Add ${rupee(FREE_OVER-t.sum)} more for free delivery.</div>`:""}
+        <div class="bill total"><span>To pay</span><span>${rupee(t.grand)}</span></div>
+        ${t.mrp>t.sum?`<div class="note free">You save ${rupee(t.mrp-t.sum)} on this order.</div>`:""}</div>
+      <div class="box"><h4>Deliver to</h4>
+        <label class="f">Name<input id="cName" autocomplete="name" value="${esc(c.name||"")}"></label>
+        <label class="f">Mobile number<input id="cPhone" inputmode="numeric" autocomplete="tel-national" maxlength="10" placeholder="10 digits" value="${esc(c.phone||"")}"></label>
+        <label class="f">Address<textarea id="cAddr" rows="2" autocomplete="street-address" placeholder="Flat, building, street">${esc(c.address||"")}</textarea></label>
+        <div class="note">Pay on delivery, by cash or UPI to the rider.</div></div>
+      ${lastErr?`<div class="err" role="alert">${esc(lastErr)}</div>`:""}`;
+    foot.hidden=false; foot.innerHTML=`<button class="cta" id="placeBtn" ${placing?"disabled":""}><span>${rupee(t.grand)} · pay on delivery</span><span>${placing?"Placing…":"Place order ›"}</span></button>`;
+    return;
+  }
+  if(sheetOpen==="orders"){
+    title.textContent="My orders"; const mine=myOrders().slice().reverse();
+    body.innerHTML = mine.length ? mine.map(o=>`<button class="ordrow" data-track="${esc(o.order_id)}"><span><b>${esc(o.order_id)}</b><br><span class="note">${new Date(o.placed_at).toLocaleString("en-IN",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})} · ${rupee(o.total||0)}</span></span><span class="badge ${o.status==="dispatched"?"done":""}">${STAT[o.status]?.[0]||o.status}</span></button>`).join("")
+      : `<div class="empty">No orders yet.</div>`;
+    return;
+  }
+  if(sheetOpen && sheetOpen.startsWith("track-")){
+    const id=sheetOpen.slice(6), o=myOrders().find(x=>x.order_id===id);
+    title.textContent="Order "+id;
+    if(!o){ body.innerHTML=`<div class="empty">This order is not on this device.</div>`; return; }
+    const steps=["placed","picking","packed","dispatched"], at=steps.indexOf(o.status);
+    body.innerHTML=`<div class="box"><h4>${o.status==="dispatched"?"On the way to you":o.status==="cancelled"?"Order cancelled":"Order received by the store"}</h4>
+      <div class="track">${steps.map((s,i)=>`<div class="tstep ${i<at||o.status==="dispatched"?"done":i===at?"now":""}"><span class="tdot">${i<at||o.status==="dispatched"?"✓":i+1}</span><div><b>${STAT[s][0]}</b><span>${STAT[s][1]}</span></div></div>`).join("")}</div></div>
+      <div class="box"><h4>Items</h4>${(o.items||[]).map(it=>{ const p=byId.get(it.sku_id); return `<div class="bill"><span>${esc(p?shortName(p):it.sku_id)} × ${it.qty}</span><span>${p?rupee(p.price_inr*it.qty):""}</span></div>`; }).join("")}
+      <div class="bill total"><span>To pay on delivery</span><span>${rupee(o.total||0)}</span></div></div>
+      <p class="note">This page updates by itself as the store picks and packs your order.</p>`;
+    return;
+  }
+  if(sheetOpen==="address"){
+    title.textContent="Delivery address"; const c=ls.get("cornerdash.customer",{});
+    body.innerHTML=`<div class="box"><label class="f">Address<textarea id="aAddr" rows="3" placeholder="Flat, building, street">${esc(c.address||"")}</textarea></label><div class="note">We deliver within 3 km of the store.</div></div>`;
+    foot.hidden=false; foot.innerHTML=`<button class="cta" id="saveAddr"><span>Save address</span><span>›</span></button>`;
+  }
+}
+const STAT={placed:["Order placed","The store has your order"],picking:["Being picked","A picker is collecting your items"],packed:["Packed","Waiting for the rider"],dispatched:["On the way","The rider has left the store"],cancelled:["Cancelled",""]};
+
+function saveCustomer(){ const c={name:$("#cName").value.trim(), phone:$("#cPhone").value.replace(/\D/g,""), address:$("#cAddr").value.trim()}; ls.set("cornerdash.customer",c); return c; }
+async function placeOrder(){
+  const c=saveCustomer(); lastErr="";
+  if(!c.name||!c.address){ lastErr="Add your name and address so the rider can find you."; renderSheet(); return; }
+  if(!/^[6-9]\d{9}$/.test(c.phone)){ lastErr="Enter a 10-digit mobile number."; renderSheet(); return; }
+  const items=Object.entries(cart).map(([sku_id,qty])=>({sku_id,qty})); const t=totals();
+  placing=true; renderSheet();
+  try{
+    let id;
+    if(MODE==="supabase"){
+      const {data,error}=await sb.rpc("place_order",{p_items:items, p_customer:c}); if(error) throw new Error(error.message); id=data;
+    } else {
+      loadDemo();                                                    // re-check stock against the warehouse right now
+      for(const it of items){ const p=byId.get(it.sku_id); if(!p||p.available<it.qty) throw new Error(`Only ${p?p.available:0} left of ${p?shortName(p):"a product"}. Your cart has been updated.`); }
+      const all=WMSCore.loadShopOrders(); id="WEB-"+(100001+all.length);
+      all.push({order_id:id, placed_at:new Date().toISOString(), status:"placed", items, customer:c, total:t.grand}); WMSCore.saveShopOrders(all);
+    }
+    const mine=myOrders(); mine.push({order_id:id, placed_at:new Date().toISOString(), status:"placed", items, total:t.grand}); ls.set("cornerdash.myorders",mine);
+    cart={}; ls.set("cornerdash.cart",cart); placing=false;
+    await refresh(); history.replaceState(null,"","#track-"+id); showSheet("track-"+id); toast("Order placed");
+  }catch(e){ placing=false; lastErr=e.message; await refresh(); renderSheet(); }
+}
+
+// ---------- Status updates from the warehouse ----------
+async function syncStatuses(){
+  const mine=myOrders(); if(!mine.length) return;
+  if(MODE==="supabase"){ const open=mine.filter(o=>o.status!=="dispatched"&&o.status!=="cancelled").map(o=>o.order_id); if(!open.length) return;
+    const {data}=await sb.rpc("order_status",{p_ids:open}); for(const r of data||[]){ const o=mine.find(x=>x.order_id===r.order_id); if(o) o.status=r.status; } }
+  else { const all=WMSCore.loadShopOrders(); for(const o of mine){ const w=all.find(x=>x.order_id===o.order_id); if(w) o.status=w.status; } }
+  ls.set("cornerdash.myorders",mine);
+}
+async function refresh(){ if(MODE==="supabase"){ try{ await loadLive(); }catch(e){ MODE="demo"; loadDemo(); } } else loadDemo(); await syncStatuses(); renderAll(); }
+
+// ---------- Events ----------
+function setQty(id, d){ const p=byId.get(id); if(!p) return; const n=Math.max(0,Math.min(p.available,(cart[id]||0)+d)); if(d>0 && n===(cart[id]||0)){ toast(`Only ${p.available} in stock`); return; }
+  if(n) cart[id]=n; else delete cart[id]; ls.set("cornerdash.cart",cart); renderMain(); renderCartBar(); if(sheetOpen==="cart") renderSheet(); }
+document.addEventListener("click",e=>{
+  const inc=e.target.closest("[data-inc]"); if(inc){ setQty(inc.dataset.inc,1); return; }
+  const dec=e.target.closest("[data-dec]"); if(dec){ setQty(dec.dataset.dec,-1); return; }
+  const c=e.target.closest("[data-cat]"); if(c){ cat=c.dataset.cat; q=""; $("#q").value=""; renderCats(); renderMain(); window.scrollTo({top:0}); return; }
+  const tr=e.target.closest("[data-track]"); if(tr){ history.replaceState(null,"","#track-"+tr.dataset.track); showSheet("track-"+tr.dataset.track); return; }
+  if(e.target.closest("#placeBtn")){ placeOrder(); return; }
+  if(e.target.closest("#saveAddr")){ const cst=ls.get("cornerdash.customer",{}); cst.address=$("#aAddr").value.trim(); ls.set("cornerdash.customer",cst); renderCartBar(); closeSheet(); return; }
+  if(e.target.closest("#goShop")){ closeSheet(); return; }
+});
+document.addEventListener("input",e=>{ if(["cName","cPhone","cAddr"].includes(e.target.id)) saveCustomer(); });
+$("#q").addEventListener("input",e=>{ q=e.target.value.trim().toLowerCase(); if(q) cat=""; renderCats(); renderMain(); });
+$("#cartBarBtn").onclick=()=>openSheet("cart"); $("#cartBtnTop").onclick=()=>openSheet("cart");
+$("#ordersBtn").onclick=()=>openSheet("orders"); $("#addrBtn").onclick=()=>openSheet("address");
+$("#sheetClose").onclick=closeSheet; $("#scrim").onclick=closeSheet;
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && sheetOpen) closeSheet(); });
+window.addEventListener("hashchange",()=>{ const h=location.hash.slice(1); showSheet(["cart","orders","address"].includes(h)||h.startsWith("track-")?h:null); });
+// Demo link: when the warehouse (another tab) moves an order along, the tracking page updates.
+window.addEventListener("storage",e=>{ if(MODE==="demo" && e.key===WMSCore.SHOP_KEY) refresh(); });
+
+(async function boot(){
+  const url=SHOP_SUPABASE_URL||ls.get("shelfledger.sbUrl",""), key=SHOP_SUPABASE_ANON_KEY||ls.get("shelfledger.sbKey","");
+  if(url && key && window.supabase){ try{ sb=window.supabase.createClient(url,key); await loadLive(); MODE="supabase"; }catch(e){ sb=null; MODE="demo"; } }
+  if(MODE==="demo") loadDemo();
+  $("#liveTag").textContent = MODE==="supabase" ? "LIVE" : "DEMO";
+  $("#srcNote").textContent = MODE==="supabase" ? "Stock is live from the store" : "Demo store · prices are examples · stock comes from the demo warehouse";
+  await syncStatuses(); renderAll();
+  const h=location.hash.slice(1); if(h) showSheet(["cart","orders","address"].includes(h)||h.startsWith("track-")?h:null);
+  setInterval(()=>{ if(!placing) refresh(); }, MODE==="supabase"?20000:30000);
+})();
+</script>
+</body>
+</html>
