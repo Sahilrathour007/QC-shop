@@ -313,12 +313,12 @@ function renderSheet(){
     const id=sheetOpen.slice(6), o=myOrders().find(x=>x.order_id===id);
     title.textContent="Order "+id;
     if(!o){ body.innerHTML=`<div class="empty">This order is not on this device.</div>`; return; }
-    const steps=["placed","picking","packed","dispatched"], at=steps.indexOf(o.status);
+    const steps=["placed","picking","dispatched"], at=steps.indexOf(o.status==="packed"?"picking":o.status);
     body.innerHTML=`<div class="box"><h4>${o.status==="dispatched"?"On the way to you":o.status==="cancelled"?"Order cancelled":"Order received by the store"}</h4>
       <div class="track">${steps.map((s,i)=>`<div class="tstep ${i<at||o.status==="dispatched"?"done":i===at?"now":""}"><span class="tdot">${i<at||o.status==="dispatched"?"✓":i+1}</span><div><b>${STAT[s][0]}</b><span>${STAT[s][1]}</span></div></div>`).join("")}</div></div>
       <div class="box"><h4>Items</h4>${(o.items||[]).map(it=>{ const p=byId.get(it.sku_id); return `<div class="bill"><span>${esc(p?shortName(p):it.sku_id)} × ${it.qty}</span><span>${p?rupee(p.price_inr*it.qty):""}</span></div>`; }).join("")}
       <div class="bill total"><span>To pay on delivery</span><span>${rupee(o.total||0)}</span></div></div>
-      <p class="note">This page updates by itself as the store picks and packs your order.</p>`;
+      <p class="note">This page updates by itself as the store packs your order.</p>`;
     return;
   }
   if(sheetOpen==="address"){
@@ -327,7 +327,7 @@ function renderSheet(){
     foot.hidden=false; foot.innerHTML=`<button class="cta" id="saveAddr"><span>Save address</span><span>›</span></button>`;
   }
 }
-const STAT={placed:["Order placed","The store has your order"],picking:["Being picked","A picker is collecting your items"],packed:["Packed","Waiting for the rider"],dispatched:["On the way","The rider has left the store"],cancelled:["Cancelled",""]};
+const STAT={placed:["Order placed","The store has your order"],picking:["Being packed","The store is packing your items"],packed:["Being packed","The store is packing your items"],dispatched:["On the way","The rider has left the store"],cancelled:["Cancelled",""]};
 
 function saveCustomer(){ const c={name:$("#cName").value.trim(), phone:$("#cPhone").value.replace(/\D/g,""), address:$("#cAddr").value.trim()}; ls.set("cornerdash.customer",c); return c; }
 async function placeOrder(){
