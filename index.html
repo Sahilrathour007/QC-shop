@@ -140,7 +140,7 @@ footer a{color:var(--ink-2)}
   <div class="hrow">
     <a class="logo" href="#" aria-label="Corner Dash home">corner<span>dash</span></a>
     <div class="promise">
-      <div class="eta" id="eta">Delivery in 12 min <i id="liveTag">LIVE</i></div>
+      <div class="eta" id="eta">Delivery in 12 min <i id="liveTag">…</i></div>
       <button class="addr" id="addrBtn" aria-label="Change delivery address"><b>Home</b> · <span id="addrTxt">Add your address</span> ▾</button>
     </div>
     <button class="iconbtn" id="ordersBtn" aria-label="My orders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h12l1 4H5l1-4z"/><path d="M5 6h14v15H5z"/><path d="M9 11h6M9 15h4"/></svg><span class="lbl">My orders</span></button>
@@ -152,7 +152,7 @@ footer a{color:var(--ink-2)}
 </div></header>
 
 <main class="wrap gut" id="main"></main>
-<footer class="wrap gut"><span id="srcNote">Demo store · prices are examples</span><a href="../Quick-Commerce-optimization/">Store staff: warehouse</a></footer>
+<footer class="wrap gut"><span id="srcNote">Stock is live from the store</span><a href="../Quick-Commerce-optimization/">Store staff: warehouse</a></footer>
 
 <div class="cartbar" id="cartbar" hidden><button id="cartBarBtn"><span><span id="cbItems">0 items</span><small id="cbTotal">₹0</small></span><span>View cart ›</span></button></div>
 
@@ -165,7 +165,6 @@ footer a{color:var(--ink-2)}
 <div class="toast" id="toast" hidden></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="core.js"></script>
 <script>
 "use strict";
 // ---- Connect to your Supabase project when hosting this file yourself (or set it in the warehouse Setup tab on the same site).
@@ -180,7 +179,7 @@ const FREE_OVER=199, DELIVERY_FEE=25;
 const CAT_LABEL={Dairy:"Dairy & eggs",Bakery:"Bread & bakery",Snacks:"Chips & namkeen",Biscuits:"Biscuits",Beverages:"Drinks & juices","Instant food":"Instant food",Staples:"Atta, rice & oil","Home care":"Cleaning","Personal care":"Personal care",Baby:"Baby care",Frozen:"Frozen & ice cream"};
 const CAT_ORDER=["Dairy","Bakery","Snacks","Beverages","Biscuits","Instant food","Staples","Frozen","Personal care","Home care","Baby"];
 
-let MODE="demo", sb=null, P=[], byId=new Map(), BEST=[], OPEN=0;
+let MODE="down", sb=null, P=[], byId=new Map(), BEST=[], OPEN=0;
 let cart = ls.get("cornerdash.cart", {});
 let cat = "", q = "";
 
@@ -212,14 +211,6 @@ const picture = p => p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.
 
 // ---------- Data ----------
 function shortName(p){ return p.name.replace(new RegExp("[ ,]*"+p.pack.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"$"),"").replace(/,\s*\d+\s*pack$/,""); }
-function loadDemo(){
-  const S=WMSCore.mergeShopOrders(WMSCore.buildDemo(Date.now()));
-  const avail=WMSCore.availability(S), sold=new Map(), since=Date.now()-28*864e5, ord=new Map(S.sales_orders.map(o=>[o.order_id,o]));
-  for(const l of S.order_lines){ const o=ord.get(l.order_id); if(o && Date.parse(o.placed_at)>=since) sold.set(l.sku_id,(sold.get(l.sku_id)||0)+l.qty); }
-  P=S.skus.map(s=>({...s, available:Math.max(0,avail.get(s.sku_id)||0), sold:sold.get(s.sku_id)||0}));
-  OPEN=S.sales_orders.filter(o=>["placed","picking","packed"].includes(o.status)).length;
-  index();
-}
 async function loadLive(){
   const {data,error}=await sb.from("shop_catalog").select("*"); if(error) throw error;
   P=data.map(r=>({...r, sold:0})); index();
@@ -340,12 +331,7 @@ async function placeOrder(){
     let id;
     if(MODE==="supabase"){
       const {data,error}=await sb.rpc("place_order",{p_items:items, p_customer:c}); if(error) throw new Error(error.message); id=data;
-    } else {
-      loadDemo();                                                    // re-check stock against the warehouse right now
-      for(const it of items){ const p=byId.get(it.sku_id); if(!p||p.available<it.qty) throw new Error(`Only ${p?p.available:0} left of ${p?shortName(p):"a product"}. Your cart has been updated.`); }
-      const all=WMSCore.loadShopOrders(); id="WEB-"+(100001+all.length);
-      all.push({order_id:id, placed_at:new Date().toISOString(), status:"placed", items, customer:c, total:t.grand}); WMSCore.saveShopOrders(all);
-    }
+    } else throw new Error("The store is offline, so your order was not placed. Please try again in a minute.");
     const mine=myOrders(); mine.push({order_id:id, placed_at:new Date().toISOString(), status:"placed", items, total:t.grand}); ls.set("cornerdash.myorders",mine);
     cart={}; ls.set("cornerdash.cart",cart); placing=false;
     await refresh(); history.replaceState(null,"","#track-"+id); showSheet("track-"+id); toast("Order placed");
@@ -355,12 +341,18 @@ async function placeOrder(){
 // ---------- Status updates from the warehouse ----------
 async function syncStatuses(){
   const mine=myOrders(); if(!mine.length) return;
-  if(MODE==="supabase"){ const open=mine.filter(o=>o.status!=="dispatched"&&o.status!=="cancelled").map(o=>o.order_id); if(!open.length) return;
-    const {data}=await sb.rpc("order_status",{p_ids:open}); for(const r of data||[]){ const o=mine.find(x=>x.order_id===r.order_id); if(o) o.status=r.status; } }
-  else { const all=WMSCore.loadShopOrders(); for(const o of mine){ const w=all.find(x=>x.order_id===o.order_id); if(w) o.status=w.status; } }
-  ls.set("cornerdash.myorders",mine);
+  if(MODE!=="supabase") return;
+  const {data,error}=await sb.rpc("order_status",{p_ids:mine.map(o=>o.order_id)}); if(error) return;
+  const found=new Map((data||[]).map(r=>[r.order_id,r.status]));
+  const kept=mine.filter(o=>found.has(o.order_id)).map(o=>({...o, status:found.get(o.order_id)}));   // drops old demo orders the database never had
+  ls.set("cornerdash.myorders",kept);
 }
-async function refresh(){ if(MODE==="supabase"){ try{ await loadLive(); }catch(e){ MODE="demo"; loadDemo(); } } else loadDemo(); await syncStatuses(); renderAll(); }
+// No demo fallback: if the store database cannot be reached, the shop says so and takes no orders.
+function showDown(){ P=[]; byId=new Map(); BEST=[]; $("#liveTag").textContent="OFFLINE";
+  $("#main").innerHTML=`<div class="empty"><b>The store is offline right now.</b><br>We can't take orders at the moment. This page will reconnect by itself.</div>`; $("#cartbar").hidden=true; $("#cats").innerHTML=""; }
+async function connect(){ const url=SHOP_SUPABASE_URL||ls.get("shelfledger.sbUrl",""), key=SHOP_SUPABASE_ANON_KEY||ls.get("shelfledger.sbKey","");
+  if(!url||!key||!window.supabase) throw new Error("offline"); if(!sb) sb=window.supabase.createClient(url,key); await loadLive(); MODE="supabase"; $("#liveTag").textContent="LIVE"; }
+async function refresh(){ try{ await connect(); }catch(e){ MODE="down"; showDown(); return; } await syncStatuses(); renderAll(); }
 
 // ---------- Events ----------
 function setQty(id, d){ const p=byId.get(id); if(!p) return; const n=Math.max(0,Math.min(p.available,(cart[id]||0)+d)); if(d>0 && n===(cart[id]||0)){ toast(`Only ${p.available} in stock`); return; }
@@ -381,18 +373,13 @@ $("#ordersBtn").onclick=()=>openSheet("orders"); $("#addrBtn").onclick=()=>openS
 $("#sheetClose").onclick=closeSheet; $("#scrim").onclick=closeSheet;
 document.addEventListener("keydown",e=>{ if(e.key==="Escape" && sheetOpen) closeSheet(); });
 window.addEventListener("hashchange",()=>{ const h=location.hash.slice(1); showSheet(["cart","orders","address"].includes(h)||h.startsWith("track-")?h:null); });
-// Demo link: when the warehouse (another tab) moves an order along, the tracking page updates.
-window.addEventListener("storage",e=>{ if(MODE==="demo" && e.key===WMSCore.SHOP_KEY) refresh(); });
+
 
 (async function boot(){
-  const url=SHOP_SUPABASE_URL||ls.get("shelfledger.sbUrl",""), key=SHOP_SUPABASE_ANON_KEY||ls.get("shelfledger.sbKey","");
-  if(url && key && window.supabase){ try{ sb=window.supabase.createClient(url,key); await loadLive(); MODE="supabase"; }catch(e){ sb=null; MODE="demo"; } }
-  if(MODE==="demo") loadDemo();
-  $("#liveTag").textContent = MODE==="supabase" ? "LIVE" : "DEMO";
-  $("#srcNote").textContent = MODE==="supabase" ? "Stock is live from the store" : "Demo store · prices are examples · stock comes from the demo warehouse";
-  await syncStatuses(); renderAll();
+  $("#srcNote").textContent = "Stock is live from the store";
+  await refresh();
   const h=location.hash.slice(1); if(h) showSheet(["cart","orders","address"].includes(h)||h.startsWith("track-")?h:null);
-  setInterval(()=>{ if(!placing) refresh(); }, MODE==="supabase"?20000:30000);
+  setInterval(()=>{ if(!placing) refresh(); }, 20000);
 })();
 </script>
 </body>

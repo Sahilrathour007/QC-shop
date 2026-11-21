@@ -5,11 +5,9 @@ The customer shop for a quick-commerce dark store. Mobile-first, and works on ph
 | File | What it is |
 |---|---|
 | `index.html` | The shop: search, categories, bestsellers, cart, checkout (pay on delivery), order tracking, and My orders. |
-| `core.js` | Demo data and stock maths. The same file is in Quick-Commerce-optimization; keep the two copies identical. |
 
 ## Run it
-- **Demo:** open `index.html`. Stock and bestsellers come from the demo warehouse.
-- **With GitHub Pages:** turn on Pages for this repo and for Quick-Commerce-optimization (Settings → Pages → Deploy from branch → `main`, root). In demo mode, an order placed here appears in the warehouse Orders tab in the same browser, and the tracking page updates as the warehouse picks and packs it.
+- **With GitHub Pages:** turn on Pages for this repo and for Quick-Commerce-optimization (Settings → Pages → Deploy from branch → `main`, root). 
 - **Live:**
   1. Run the warehouse's `supabase/schema.sql` in your Supabase project.
   2. Put the Project URL and the anon public key in `SHOP_SUPABASE_URL` and `SHOP_SUPABASE_ANON_KEY` at the top of the script in `index.html`. The anon key is public by design; the database only lets customers read the catalogue and place or track orders.
@@ -26,3 +24,6 @@ The shop draws an original illustration for each product. For real photos, use p
 ## Not built yet
 - Online payment (UPI or card). Needs a payment provider.
 - Customer accounts. "My orders" lives on the customer's device.
+
+## When the database is unreachable
+The shop shows "The store is offline" and takes no orders. It reconnects by itself every 20 seconds. There is no demo mode: every order goes to the database or is refused.
